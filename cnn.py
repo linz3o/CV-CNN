@@ -20,3 +20,16 @@ if len(trainset) > 0 and len(testset) > 0:
     print("Loading successful!")
 else:
     print("Loading failed.")
+    
+labels_map = {
+    0: "Airplane",
+    1: "Automobile",
+    2: "Bird",
+    3: "Cat",
+    4: "Deer",
+    5: "Dog",
+    6: "Frog",
+    7: "Horse",
+    8: "Ship",
+    9: "Truck",
+}
