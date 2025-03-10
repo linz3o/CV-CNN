@@ -1,0 +1,97 @@
+import torch
+import torchvision
+import torchvision.transforms as transform
+from torch.utils.data import DataLoader, random_split
+import matplotlib.pyplot as plt
+
+# Download and load training set
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+
+# Split the training set into training and validation sets
+train_size = int(0.8 * len(trainset))
+val_size = len(trainset) - train_size
+trainset, valset = random_split(trainset, [train_size, val_size])
+
+# Download and load test set
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+
+# Check if datasets are loaded correctly
+if len(trainset) > 0 and len(testset) > 0:
+    print("Loading successful!")
+else:
+    print("Loading failed.")
+    
+labels_map = {
+    0: "Airplane",
+    1: "Automobile",
+    2: "Bird",
+    3: "Cat",
+    4: "Deer",
+    5: "Dog",
+    6: "Frog",
+    7: "Horse",
+    8: "Ship",
+    9: "Truck",
+}
+
+class LeNet5(nn.Module):
+    def __init__(self):
+        super(LeNet5, self).__init__()
+        
+        # Convolutional Layer 1: 6 filters, 5x5 kernel
+        self.conv1 = nn.Conv2d(3, 6, kernel_size=5)
+        
+        # Max Pooling Layer 1: 2x2 pool size, stride 2
+        self.pool = nn.MaxPool2d(2, 2)
+        
+        # Convolutional Layer 2: 16 filters, 5x5 kernel
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        
+        # Fully Connected Layer 1: 120 neurons
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        
+        # Fully Connected Layer 2: 84 neurons
+        self.fc2 = nn.Linear(120, 84)
+        
+        # Output Layer: 10 neurons (for CIFAR-10)
+        self.fc3 = nn.Linear(84, 10)
+        
+        # Initialize weights
+        self.apply(self.init_weights)
+    
+    def init_weights(self, m):
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+            nn.init.kaiming_uniform_(m.weight, nonlinearity='relu')
+            if m.bias is not None:
+                nn.init.zeros_(m.bias)
+
+    def forward(self, x):
+        # Apply Conv Layer 1 + ReLU + Max Pooling
+        x = F.relu(self.conv1(x))
+        x = self.pool(x)
+        
+        # Apply Conv Layer 2 + ReLU + Max Pooling
+        x = F.relu(self.conv2(x))
+        x = self.pool(x)
+        
+        # Flatten the output from the convolutional layers
+        x = torch.flatten(x, 1)
+        
+        # Fully connected layers with ReLU activation
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        
+        # Output layer (no activation here, use cross-entropy loss)
+        x = self.fc3(x)
+        
+        return x  # Raw logits, we will apply softmax externally if needed (e.g., in the loss function)
+
+# Instantiate the model
+model = LeNet5()
+
+# Optimizer and Loss function
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+criterion = nn.CrossEntropyLoss()  # CrossEntropyLoss already applies softmax internally
+    
+model = LeNet5().to(device)
+print(model)
